@@ -3,4 +3,4 @@ project(database_management_system)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(database_management_system main.cpp)
+add_executable(database_management_system main.cpp utils/parser.cpp utils/parser.h constants.h)
