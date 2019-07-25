@@ -1,0 +1,14 @@
+//
+// Created by sercan.ersoy on 24.07.2019.
+//
+
+#ifndef DATABASE_MANAGEMENT_SYSTEM_QUERYPARSER_H
+#define DATABASE_MANAGEMENT_SYSTEM_QUERYPARSER_H
+
+
+class QueryParser {
+
+};
+
+
+#endif //DATABASE_MANAGEMENT_SYSTEM_QUERYPARSER_H
