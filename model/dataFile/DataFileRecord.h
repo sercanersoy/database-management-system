@@ -6,7 +6,7 @@
 #define DATABASE_MANAGEMENT_SYSTEM_DATAFILERECORD_H
 
 
-#include "../../constants.h"
+#include "../../config.h"
 #include "DataFileRecordHeader.h"
 
 class DataFileRecord {

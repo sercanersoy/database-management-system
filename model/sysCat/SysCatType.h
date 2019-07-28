@@ -6,12 +6,17 @@
 #define DATABASE_MANAGEMENT_SYSTEM_SYSCATTYPE_H
 
 
-#include "../../constants.h"
+#include "../../config.h"
 #include "SysCatTypeHeader.h"
 
 class SysCatType {
+public:
     SysCatTypeHeader typeHeader;
     char fields[SYS_CAT_TYPE_FIELD_LIMIT][SYS_CAT_TYPE_FIELD_SIZE];
+
+    SysCatType();
+    SysCatType(SysCatTypeHeader _typeHeader, char **_fields);
+    SysCatType &operator=(const SysCatType &rhs);
 };
 
 
