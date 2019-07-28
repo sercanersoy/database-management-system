@@ -15,8 +15,11 @@
 class FileManager {
 public:
     static void initializeSysCat(std::fstream &sysCat);
+    static void initializeDataFile(std::fstream &dataFile);
     static void createInitializeSysCatAndOpen(std::fstream &sysCat);
+    static void createInitializeDataFileAndOpen(std::fstream &dataFile, std::string &typeName, int fileNo);
     static void createDataDirIfAbsent();
+    static void deleteDataFilesOfType(std::fstream &sysCat, std::string &typeName);
 };
 
 

@@ -18,6 +18,7 @@ SysCatPage &SysCatPage::operator=(const SysCatPage &rhs) {
     for (int i = 0; i < SYS_CAT_TYPE_LIMIT; ++i) {
         types[i] = rhs.types[i];
     }
+    return *this;
 }
 
 SysCatPage SysCatPage::readFromFile(std::fstream &file, int pageNo) {

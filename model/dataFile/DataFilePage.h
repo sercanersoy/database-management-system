@@ -10,8 +10,15 @@
 #include "DataFileRecord.h"
 
 class DataFilePage {
-    DataFilePageHeader header;
+public:
+    DataFilePageHeader pageHeader;
     DataFileRecord records[DATA_FILE_RECORD_LIMIT];
+
+    DataFilePage();
+    DataFilePage(DataFilePageHeader _pageHeader, DataFileRecord *_records);
+    DataFilePage &operator=(const DataFilePage &rhs);
+    static DataFilePage readFromFile(std::fstream &file, int pageNo);
+    void writeToFile(std::fstream &file, int pageNo);
 };
 
 

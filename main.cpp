@@ -9,21 +9,9 @@
 #include "model/sysCat/SysCatPage.h"
 #include "util/QueryManager.h"
 #include "util/FileManager.h"
+#include "util/Functions.h"
 
 using namespace std;
-
-void assignCharArray(char * array, const char * toAssign, int size) {
-    for (int i = 0; i < size; ++i) {
-        array[i] = toAssign[i];
-    }
-}
-
-void printWelcome() {
-    cout << "Welcome!" << endl;
-    cout << "Enter 'h' for help, 'q' to exit." << endl;
-    cout << "Enter your command: " << endl;
-    // TODO proper welcome message
-}
 
 int main() {
     FileManager::createDataDirIfAbsent();
@@ -31,17 +19,20 @@ int main() {
     fstream sysCat;
     FileManager::createInitializeSysCatAndOpen(sysCat);
 
-    printWelcome();
+    Functions::printWelcome();
     string line;
     do {
         cout << "> ";
         getline(cin, line);
+        if(line == "q") {
+            break;
+        }
         try {
-            QueryManager::parseAndExecute(line);
+            QueryManager::parseAndExecute(sysCat, line);
         } catch (string &message) {
             cout << message << endl;
         }
-    } while(line != "q" && line != "Q");
+    } while(true);
 
     cout << "See you later!" << endl;
 
