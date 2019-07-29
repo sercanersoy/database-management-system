@@ -7,12 +7,15 @@
 
 
 class DataFilePageHeader {
+public:
     char nofRecords;
     char firstAvailRecord;
 
     DataFilePageHeader();
+
     DataFilePageHeader(char _nofRecords, char _firstAvailRecord);
-    DataFilePageHeader &operator=(const DataFilePageHeader& rhs);
+
+    DataFilePageHeader &operator=(const DataFilePageHeader &rhs);
 };
 
 

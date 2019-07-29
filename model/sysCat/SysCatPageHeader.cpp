@@ -4,7 +4,10 @@
 
 #include "SysCatPageHeader.h"
 
-SysCatPageHeader::SysCatPageHeader() = default;
+SysCatPageHeader::SysCatPageHeader() {
+    nofTypes = 0;
+    firstAvailType = 0;
+};
 
 SysCatPageHeader &SysCatPageHeader::operator=(const SysCatPageHeader &rhs) = default;
 

@@ -1,12 +1,5 @@
 #include <iostream>
 #include <string>
-#include <fstream>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <algorithm>
-#include "config.h"
-#include "model/dataFile/DataFilePage.h"
-#include "model/sysCat/SysCatPage.h"
 #include "util/QueryManager.h"
 #include "util/FileManager.h"
 #include "util/Functions.h"
@@ -17,24 +10,21 @@ int main() {
     FileManager::createDataDirIfAbsent();
 
     fstream sysCat;
-    FileManager::createInitializeSysCatAndOpen(sysCat);
+    FileManager::openOrCreateInitializeOpenSysCat(sysCat);
 
     Functions::printWelcome();
     string line;
     do {
-        cout << "> ";
+        Functions::printPrompt();
         getline(cin, line);
-        if(line == "q") {
-            break;
-        }
         try {
             QueryManager::parseAndExecute(sysCat, line);
         } catch (string &message) {
             cout << message << endl;
         }
-    } while(true);
+    } while(line != "q");
 
-    cout << "See you later!" << endl;
+    Functions::printGoodBye();
 
     sysCat.close();
 }

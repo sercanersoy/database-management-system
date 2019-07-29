@@ -15,7 +15,9 @@ public:
     char fields[SYS_CAT_TYPE_FIELD_LIMIT][SYS_CAT_TYPE_FIELD_SIZE];
 
     SysCatType();
+
     SysCatType(SysCatTypeHeader _typeHeader, char **_fields);
+
     SysCatType &operator=(const SysCatType &rhs);
 };
 

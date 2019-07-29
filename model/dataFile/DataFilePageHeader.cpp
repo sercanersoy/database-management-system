@@ -4,7 +4,10 @@
 
 #include "DataFilePageHeader.h"
 
-DataFilePageHeader::DataFilePageHeader() = default;
+DataFilePageHeader::DataFilePageHeader() {
+    nofRecords = 0;
+    firstAvailRecord = 0;
+};
 
 DataFilePageHeader &DataFilePageHeader::operator=(const DataFilePageHeader &rhs) = default;
 

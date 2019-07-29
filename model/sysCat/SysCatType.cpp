@@ -2,9 +2,14 @@
 // Created by sercanersoy on 27.07.2019.
 //
 
+#include <cstring>
 #include "SysCatType.h"
 
-SysCatType::SysCatType() = default;
+SysCatType::SysCatType() {
+    for (auto &fieldName : fields) {
+        memset(fieldName, 0, SYS_CAT_TYPE_FIELD_SIZE);
+    }
+};
 
 SysCatType::SysCatType(SysCatTypeHeader _typeHeader, char **_fields) {
     typeHeader = _typeHeader;

@@ -7,7 +7,14 @@
 
 
 class DataFileRecordHeader {
+public:
     char valid;
+
+    DataFileRecordHeader();
+
+    explicit DataFileRecordHeader(char _valid);
+
+    DataFileRecordHeader &operator=(const DataFileRecordHeader &rhs);
 };
 
 

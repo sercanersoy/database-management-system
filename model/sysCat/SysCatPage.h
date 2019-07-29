@@ -15,13 +15,15 @@ class SysCatPage {
 public:
     SysCatPageHeader pageHeader;
     SysCatType types[SYS_CAT_TYPE_LIMIT];
-
     SysCatPage();
-    SysCatPage(SysCatPageHeader _pageHeader, SysCatType *_types);
-    SysCatPage &operator=(const SysCatPage& rhs);
 
-    static SysCatPage readFromFile(std::fstream& file, int pageNo);
-    void writeToFile(std::fstream& file, int pageNo);
+    SysCatPage(SysCatPageHeader _pageHeader, SysCatType *_types);
+
+    SysCatPage &operator=(const SysCatPage &rhs);
+
+    static SysCatPage readFromFile(std::fstream &file, int pageNo);
+
+    void writeToFile(std::fstream &file, int pageNo);
 };
 
 

@@ -24,11 +24,11 @@ SysCatPage &SysCatPage::operator=(const SysCatPage &rhs) {
 SysCatPage SysCatPage::readFromFile(std::fstream &file, int pageNo) {
     SysCatPage sysCatPage;
     file.seekg(pageNo * SYS_CAT_PAGE_SIZE);
-    file.read((char*) &sysCatPage, SYS_CAT_PAGE_SIZE);
+    file.read((char *) &sysCatPage, SYS_CAT_PAGE_SIZE);
     return sysCatPage;
 }
 
 void SysCatPage::writeToFile(std::fstream &file, int pageNo) {
     file.seekp(pageNo * SYS_CAT_PAGE_SIZE);
-    file.write((char*) this, SYS_CAT_PAGE_SIZE);
+    file.write((char *) this, SYS_CAT_PAGE_SIZE);
 }

@@ -25,11 +25,11 @@ DataFilePage &DataFilePage::operator=(const DataFilePage &rhs) {
 DataFilePage DataFilePage::readFromFile(std::fstream &file, int pageNo) {
     DataFilePage dataFilePage;
     file.seekg(pageNo * DATA_FILE_PAGE_SIZE);
-    file.read((char*) &dataFilePage, DATA_FILE_PAGE_SIZE);
+    file.read((char *) &dataFilePage, DATA_FILE_PAGE_SIZE);
     return dataFilePage;
 }
 
 void DataFilePage::writeToFile(std::fstream &file, int pageNo) {
     file.seekp(pageNo * DATA_FILE_PAGE_SIZE);
-    file.write((char*) this, DATA_FILE_PAGE_SIZE);
+    file.write((char *) this, DATA_FILE_PAGE_SIZE);
 }

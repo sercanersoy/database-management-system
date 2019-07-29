@@ -10,11 +10,14 @@
 #include "DataFileRecordHeader.h"
 
 class DataFileRecord {
+public:
     DataFileRecordHeader recordHeader;
     char fields[DATA_FILE_RECORD_FIELD_LIMIT][DATA_FILE_RECORD_FIELD_SIZE];
 
     DataFileRecord();
+
     DataFileRecord(DataFileRecordHeader _recordHeader, char **_fields);
+
     DataFileRecord &operator=(const DataFileRecord &rhs);
 };
 

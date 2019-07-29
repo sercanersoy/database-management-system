@@ -10,12 +10,14 @@
 
 class SysCatTypeHeader {
 public:
-    char valid = 0;
+    char valid;
     char typeName[SYS_CAT_TYPE_FIELD_SIZE];
     char nofFields;
 
     SysCatTypeHeader();
+
     SysCatTypeHeader(char _valid, char *_typeName, char _nofFields);
+
     SysCatTypeHeader &operator=(const SysCatTypeHeader &rhs);
 };
 
