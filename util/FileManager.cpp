@@ -88,9 +88,9 @@ std::vector<int> FileManager::returnSortedFileNumbersOfType(std::string &typeNam
     std::vector<int> vector;
     DIR *dir = opendir(DATA_DIR);
     dirent *ent = readdir(dir);
-    while(ent != nullptr) {
+    while (ent != nullptr) {
         std::cmatch cm;
-        if(std::regex_match(ent->d_name, cm, regExpr)) {
+        if (std::regex_match(ent->d_name, cm, regExpr)) {
             int fileNumber = std::stoi(cm[1]);
             vector.push_back(fileNumber);
         }
@@ -99,4 +99,11 @@ std::vector<int> FileManager::returnSortedFileNumbersOfType(std::string &typeNam
     std::sort(vector.begin(), vector.end());
     closedir(dir);
     return vector;
+}
+
+void FileManager::deleteDataFile(std::string typeName, int fileNo) {
+    std::string path = DATA_DIR + typeName + "#" + std::to_string(fileNo) + ".dat";
+    if (remove(path.c_str()) != 0) {
+        throw std::string("Error deleting data file.");
+    }
 }

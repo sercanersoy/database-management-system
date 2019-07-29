@@ -1,12 +1,11 @@
 #include <iostream>
-#include <string>
 #include "util/QueryManager.h"
 #include "util/FileManager.h"
 #include "util/Functions.h"
 
 using namespace std;
 
-int main() {
+void openCommandLineMode() {
     FileManager::createDataDirIfAbsent();
 
     fstream sysCat;
@@ -22,9 +21,59 @@ int main() {
         } catch (string &message) {
             cout << message << endl;
         }
-    } while(line != "q");
+    } while (line != "q");
 
     Functions::printGoodBye();
 
     sysCat.close();
+}
+
+void openInputOutputMode(string &inputPath, string &outputPath) {
+    FileManager::createDataDirIfAbsent();
+
+    ifstream input;
+    input.open(inputPath);
+    if (!input) {
+        cerr << "Error opening input file." << endl;
+        exit(1);
+    }
+
+    ofstream output;
+    output.open(outputPath);
+    if (!output) {
+        cerr << "Error opening output file." << endl;
+        exit(1);
+    }
+    QueryManager::output = &output;
+
+    fstream sysCat;
+    FileManager::openOrCreateInitializeOpenSysCat(sysCat);
+
+    string line;
+    getline(input, line);
+    while (!line.empty()) {
+        try {
+            QueryManager::parseAndExecute(sysCat, line);
+        } catch (string &message) {
+            cout << message << endl;
+        }
+        getline(input, line);
+    }
+
+    sysCat.close();
+    input.close();
+    output.close();
+}
+
+int main(int argc, char *argv[]) {
+    if (argc == 1) {
+        openCommandLineMode();
+    } else if (argc == 3) {
+        string inputPath = argv[1];
+        string outputPath = argv[2];
+        openInputOutputMode(inputPath, outputPath);
+    } else {
+        cerr << "Invalid number of arguments." << endl;
+        exit(1);
+    }
 }

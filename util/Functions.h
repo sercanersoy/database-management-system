@@ -10,8 +10,11 @@
 class Functions {
 public:
     static void printWelcome();
+
     static void printHelp();
+
     static void printGoodBye();
+
     static void printPrompt();
 };
 

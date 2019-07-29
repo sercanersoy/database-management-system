@@ -1,7 +1,3 @@
-#include <utility>
-
-#include <utility>
-
 //
 // Created by sercan.ersoy on 24.07.2019.
 //
@@ -10,17 +6,16 @@
 #include <iostream>
 #include <regex>
 #include "QueryManager.h"
-#include "../config.h"
 #include "../model/sysCat/SysCatPage.h"
-#include "Functions.h"
 #include "FileManager.h"
 #include "../model/dataFile/DataFilePage.h"
+#include "Functions.h"
 
-std::string const QueryManager::helpMessage = "Enter 'h' for help.";
+std::ofstream *QueryManager::output = nullptr;
 
 void QueryManager::assertExpr(bool expr, std::string message) {
     if (!expr) {
-        throw message + "\n" + helpMessage;
+        throw message;
     }
 }
 
@@ -72,7 +67,7 @@ int QueryManager::findFileNumberToCreateDataFile(std::string &typeName) {
     std::vector<int> vector = FileManager::returnSortedFileNumbersOfType(typeName);
     int fileNumber = 0;
     for (int i : vector) {
-        if(i == fileNumber) {
+        if (i == fileNumber) {
             fileNumber++;
         } else {
             break;
@@ -81,19 +76,29 @@ int QueryManager::findFileNumberToCreateDataFile(std::string &typeName) {
     return fileNumber;
 }
 
+bool QueryManager::isDataFileEmpty(std::fstream &dataFile) {
+    for (int i = 0; i < DATA_FILE_PAGE_LIMIT; ++i) {
+        DataFilePage page = DataFilePage::readFromFile(dataFile, i);
+        if (page.pageHeader.nofRecords > 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void QueryManager::parseAndExecute(std::fstream &sysCat, std::string line) {
     std::vector<std::string> words = splitLine(std::move(line), ' ');
-    if(words.size() == 1) {
+    // help or quit commands
+    if (output == nullptr && words.size() == 1) {
         if (words[0] == "h") {
             Functions::printHelp();
             return;
-        } else if(words[0] == "q" || words[0].empty()) {
+        } else if (words[0] == "q" || words[0].empty()) {
             return;
         }
     }
-    assertExpr(words.size() >= 2, "Number of words cannot be less than 2.");
-    // DDL Operations
-    if (words[0] == "create" && words[1] == "type") {
+    assertExpr(words.size() >= 2, "Number of words in a command cannot be less than 2.");
+    if (words[0] == "create" && words[1] == "type") { // DDL Operations
         assertExpr(words.size() >= 5, "Number of words cannot be less than 5 in a create type command.");
         std::string typeName = words[2];
         int nofFields = std::stoi(words[3]);
@@ -106,23 +111,40 @@ void QueryManager::parseAndExecute(std::fstream &sysCat, std::string line) {
     } else if (words[0] == "list" && words[1] == "type") {
         assertExpr(words.size() == 2, "List type command has no arguments.");
         listType(sysCat);
-    }
-        // DML Operations
-    else if (words[0] == "create" && words[1] == "record") {
+    } else if (words[0] == "create" && words[1] == "record") { // DML Operations
+        assertExpr(words.size() >= 4, "Number of words cannot be less than 4 in a create record command.");
         std::string typeName = words[2];
         int nofFields = getNofFieldsOfType(sysCat, typeName); // returns 0 if type does not exist
         assertExpr(nofFields > 0, "Type does not exist");
-        assertExpr(nofFields == words.size() - 3, "Invalid number of field data, expected " + std::to_string(nofFields) + ".");
+        assertExpr(nofFields == words.size() - 3,
+                   "Invalid number of field data, expected " + std::to_string(nofFields) + ".");
         createRecord(words, nofFields);
     } else if (words[0] == "delete" && words[1] == "record") {
-
-    } else if(words[0] == "list" && words[1] == "record") {
+        assertExpr(words.size() == 4, "Number of words in a delete record command must be equal to 4.");
+        std::string typeName = words[2];
+        int nofFields = getNofFieldsOfType(sysCat, typeName);
+        assertExpr(nofFields > 0, "Type does not exist.");
+        int primaryKey = std::stoi(words[3]);
+        deleteRecord(typeName, primaryKey, nofFields);
+    } else if (words[0] == "update" && words[1] == "record") {
+        assertExpr(words.size() >= 5, "Number of words cannot be less than 5 in an update record command.");
+        std::string typeName = words[2];
+        int nofFields = getNofFieldsOfType(sysCat, typeName);
+        assertExpr(nofFields > 0, "Type does not exist.");
+        updateRecord(words, nofFields);
+    } else if (words[0] == "search" && words[1] == "record") {
+        assertExpr(words.size() == 4, "Number of words must be equal to 4 in a search record command.");
+        std::string typeName = words[2];
+        int primaryKey = std::stoi(words[3]);
+        int nofFields = getNofFieldsOfType(sysCat, typeName);
+        assertExpr(nofFields > 0, "Type does not exist.");
+        searchRecord(typeName, primaryKey, nofFields);
+    } else if (words[0] == "list" && words[1] == "record") {
         assertExpr(words.size() == 3, "Number of words must be 3 in a list record command.");
         std::string typeName = words[2];
         int nofFields = getNofFieldsOfType(sysCat, typeName);
         listRecord(typeName, nofFields);
-    }
-    else {
+    } else {
         assertExpr(false, "Command you entered is not valid.");
     }
 }
@@ -147,13 +169,11 @@ void QueryManager::createType(std::fstream &sysCat, std::vector<std::string> &wo
                 if (page.types[j].typeHeader.valid == 0) {
                     page.pageHeader.firstAvailType = (char) j;
                     page.writeToFile(sysCat, i);
-                    std::cout << "Successfully created type." << std::endl;
                     return;
                 }
             }
             page.pageHeader.firstAvailType = SYS_CAT_TYPE_LIMIT;
             page.writeToFile(sysCat, i);
-            std::cout << "Successfully created type." << std::endl;
             return;
         }
     }
@@ -185,7 +205,6 @@ void QueryManager::deleteType(std::fstream &sysCat, std::string &typeName) {
                         }
                         page.writeToFile(sysCat, i);
                         FileManager::deleteDataFilesOfType(sysCat, typeName);
-                        std::cout << "Type deleted successfully." << std::endl;
                         return;
                     }
                 }
@@ -203,7 +222,11 @@ void QueryManager::listType(std::fstream &sysCat) {
             for (auto &type : page.types) {
                 int valid = type.typeHeader.valid;
                 if (valid == 1) {
-                    std::cout << type.typeHeader.typeName << std::endl;
+                    if (output != nullptr) {
+                        *output << type.typeHeader.typeName << std::endl;
+                    } else {
+                        std::cout << type.typeHeader.typeName << std::endl;
+                    }
                 }
             }
         }
@@ -215,16 +238,16 @@ void QueryManager::createRecord(std::vector<std::string> &words, int nofFields) 
     std::regex regExpr("^" + typeName + "#([0-9]+).dat$");
     DIR *dir = opendir(DATA_DIR);
     dirent *ent = readdir(dir);
-    while(ent != nullptr) {
+    while (ent != nullptr) {
         std::cmatch cm;
-        if(std::regex_match(ent->d_name, cm, regExpr)) {
+        if (std::regex_match(ent->d_name, cm, regExpr)) {
             int fileNo = std::stoi(cm[1]);
             std::fstream dataFile;
             FileManager::openOrCreateInitializeOpenDataFile(dataFile, typeName, fileNo);
             for (int i = 0; i < DATA_FILE_PAGE_LIMIT; ++i) {
                 DataFilePage page = DataFilePage::readFromFile(dataFile, i);
                 int firstAvailRecord = page.pageHeader.firstAvailRecord;
-                if(page.pageHeader.firstAvailRecord == DATA_FILE_RECORD_LIMIT) {
+                if (page.pageHeader.firstAvailRecord == DATA_FILE_RECORD_LIMIT) {
                     continue;
                 }
                 page.records[firstAvailRecord].recordHeader.valid = 1;
@@ -234,8 +257,8 @@ void QueryManager::createRecord(std::vector<std::string> &words, int nofFields) 
                 }
                 page.pageHeader.nofRecords++;
                 int j = firstAvailRecord + 1;
-                for ( ; j < DATA_FILE_RECORD_LIMIT; ++j) {
-                    if(page.records[j].recordHeader.valid == 0) {
+                for (; j < DATA_FILE_RECORD_LIMIT; ++j) {
+                    if (page.records[j].recordHeader.valid == 0) {
                         break;
                     }
                 }
@@ -265,29 +288,181 @@ void QueryManager::createRecord(std::vector<std::string> &words, int nofFields) 
     closedir(dir);
 }
 
-void QueryManager::listRecord(std::string &typeName, int nofFields) {
+void QueryManager::deleteRecord(std::string typeName, int primaryKey, int nofFields) {
     std::regex regExpr("^" + typeName + "#([0-9]+).dat$");
     DIR *dir = opendir(DATA_DIR);
     dirent *ent = readdir(dir);
-    while(ent != nullptr) {
+    while (ent != nullptr) {
         std::cmatch cm;
-        if(std::regex_match(ent->d_name, cm, regExpr)) {
+        if (std::regex_match(ent->d_name, cm, regExpr)) {
             int fileNo = std::stoi(cm[1]);
             std::fstream dataFile;
             FileManager::openOrCreateInitializeOpenDataFile(dataFile, typeName, fileNo);
             for (int i = 0; i < DATA_FILE_PAGE_LIMIT; ++i) {
                 DataFilePage page = DataFilePage::readFromFile(dataFile, i);
                 int nofRecords = page.pageHeader.nofRecords;
-                if(page.pageHeader.nofRecords == 0) {
+                if (nofRecords > 0) {
+                    int firstAvailRecord = page.pageHeader.firstAvailRecord;
+                    for (int j = 0; j < DATA_FILE_RECORD_LIMIT; ++j) {
+                        int valid = page.records[j].recordHeader.valid;
+                        if (valid == 1) {
+                            int *currentPrimaryKey = (int *) &page.records[j].fields[0];
+                            if (*currentPrimaryKey == primaryKey) {
+                                // delete record
+                                page.records[j].recordHeader.valid = 0;
+                                for (int k = 0; k < nofFields; ++k) {
+                                    memset(page.records[j].fields[k], 0, DATA_FILE_RECORD_FIELD_SIZE);
+                                }
+                                page.pageHeader.nofRecords--;
+                                if (firstAvailRecord > j) {
+                                    page.pageHeader.firstAvailRecord = (char) j;
+                                }
+                                page.writeToFile(dataFile, i);
+                                if (page.pageHeader.nofRecords == 0 && isDataFileEmpty(dataFile)) {
+                                    FileManager::deleteDataFile(typeName, fileNo);
+                                }
+                                dataFile.close();
+                                closedir(dir);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            dataFile.close();
+        }
+        ent = readdir(dir);
+    }
+    closedir(dir);
+    throw std::string("Record does not exist.");
+}
+
+void QueryManager::updateRecord(std::vector<std::string> &words, int nofFields) {
+    std::string typeName = words[2];
+    int primaryKey = std::stoi(words[3]);
+    std::regex regExpr("^" + typeName + "#([0-9]+).dat$");
+    DIR *dir = opendir(DATA_DIR);
+    dirent *ent = readdir(dir);
+    while (ent != nullptr) {
+        std::cmatch cm;
+        if (std::regex_match(ent->d_name, cm, regExpr)) {
+            int fileNo = std::stoi(cm[1]);
+            std::fstream dataFile;
+            FileManager::openOrCreateInitializeOpenDataFile(dataFile, typeName, fileNo);
+            for (int i = 0; i < DATA_FILE_PAGE_LIMIT; ++i) {
+                DataFilePage page = DataFilePage::readFromFile(dataFile, i);
+                int nofRecords = page.pageHeader.nofRecords;
+                if (nofRecords > 0) {
+                    for (auto &record : page.records) {
+                        int valid = record.recordHeader.valid;
+                        if (valid == 1) {
+                            int *currentPrimaryKey = (int *) &record.fields[0];
+                            if (*currentPrimaryKey == primaryKey) {
+                                for (int k = 1; k < nofFields; ++k) {
+                                    int fieldData = std::stoi(words[3 + k]);
+                                    memcpy(record.fields[k], &fieldData, DATA_FILE_RECORD_FIELD_SIZE);
+                                }
+                                page.writeToFile(dataFile, i);
+                                dataFile.close();
+                                closedir(dir);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            dataFile.close();
+        }
+        ent = readdir(dir);
+    }
+    closedir(dir);
+    throw std::string("Record does not exist.");
+}
+
+void QueryManager::searchRecord(std::string typeName, int primaryKey, int nofFields) {
+    std::regex regExpr("^" + typeName + "#([0-9]+).dat$");
+    DIR *dir = opendir(DATA_DIR);
+    dirent *ent = readdir(dir);
+    while (ent != nullptr) {
+        std::cmatch cm;
+        if (std::regex_match(ent->d_name, cm, regExpr)) {
+            int fileNo = std::stoi(cm[1]);
+            std::fstream dataFile;
+            FileManager::openOrCreateInitializeOpenDataFile(dataFile, typeName, fileNo);
+            for (int i = 0; i < DATA_FILE_PAGE_LIMIT; ++i) {
+                DataFilePage page = DataFilePage::readFromFile(dataFile, i);
+                int nofRecords = page.pageHeader.nofRecords;
+                if (nofRecords > 0) {
+                    for (auto &record : page.records) {
+                        int valid = record.recordHeader.valid;
+                        if (valid == 1) {
+                            int *currentPrimaryKey = (int *) &record.fields[0];
+                            if (*currentPrimaryKey == primaryKey) {
+                                if (output != nullptr) {
+                                    *output << *currentPrimaryKey << " ";
+                                } else {
+                                    std::cout << *currentPrimaryKey << " ";
+                                }
+                                for (int k = 1; k < nofFields; ++k) {
+                                    int *fieldData = (int *) &record.fields[k];
+                                    if (output != nullptr) {
+                                        *output << *fieldData << " ";
+                                    } else {
+                                        std::cout << *fieldData << " ";
+                                    }
+                                }
+                                if (output != nullptr) {
+                                    *output << std::endl;
+                                } else {
+                                    std::cout << std::endl;
+                                }
+                                dataFile.close();
+                                closedir(dir);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            dataFile.close();
+        }
+        ent = readdir(dir);
+    }
+    closedir(dir);
+    throw std::string("Record does not exist.");
+}
+
+void QueryManager::listRecord(std::string &typeName, int nofFields) {
+    std::regex regExpr("^" + typeName + "#([0-9]+).dat$");
+    DIR *dir = opendir(DATA_DIR);
+    dirent *ent = readdir(dir);
+    while (ent != nullptr) {
+        std::cmatch cm;
+        if (std::regex_match(ent->d_name, cm, regExpr)) {
+            int fileNo = std::stoi(cm[1]);
+            std::fstream dataFile;
+            FileManager::openOrCreateInitializeOpenDataFile(dataFile, typeName, fileNo);
+            for (int i = 0; i < DATA_FILE_PAGE_LIMIT; ++i) {
+                DataFilePage page = DataFilePage::readFromFile(dataFile, i);
+                int nofRecords = page.pageHeader.nofRecords;
+                if (page.pageHeader.nofRecords == 0) {
                     continue;
                 }
-                for (auto & record : page.records) {
-                    if(record.recordHeader.valid == 1) {
+                for (auto &record : page.records) {
+                    if (record.recordHeader.valid == 1) {
                         for (int k = 0; k < nofFields; ++k) {
                             int *fieldData = (int *) record.fields[k];
-                            std::cout << *fieldData << " ";
+                            if (output != nullptr) {
+                                *output << *fieldData << " ";
+                            } else {
+                                std::cout << *fieldData << " ";
+                            }
                         }
-                        std::cout << std::endl;
+                        if (output != nullptr) {
+                            *output << std::endl;
+                        } else {
+                            std::cout << std::endl;
+                        }
                     }
                 }
             }

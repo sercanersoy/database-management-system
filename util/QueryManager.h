@@ -9,8 +9,6 @@
 #include <vector>
 
 class QueryManager {
-    static const std::string helpMessage;
-
     static void createType(std::fstream &sysCat, std::vector<std::string> &words);
 
     static void deleteType(std::fstream &sysCat, std::string &typeName);
@@ -19,14 +17,25 @@ class QueryManager {
 
     static void createRecord(std::vector<std::string> &words, int nofFields);
 
+    static void deleteRecord(std::string typeName, int primaryKey, int nofFields);
+
+    static void updateRecord(std::vector<std::string> &words, int nofFields);
+
+    static void searchRecord(std::string typeName, int primaryKey, int nofFields);
+
     static void listRecord(std::string &typeName, int nofFields);
 
     static bool doesTypeExist(std::fstream &sysCat, std::string &typeName);
 
+    static bool isDataFileEmpty(std::fstream &dataFile);
+
     static int getNofFieldsOfType(std::fstream &sysCat, std::string &typeName);
 
     static int findFileNumberToCreateDataFile(std::string &typeName);
+
 public:
+    static std::ofstream *output;
+
     static void assertExpr(bool expr, std::string message);
 
     static std::vector<std::string> splitLine(std::string line, char delimiter);

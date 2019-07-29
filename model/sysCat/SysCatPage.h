@@ -15,6 +15,7 @@ class SysCatPage {
 public:
     SysCatPageHeader pageHeader;
     SysCatType types[SYS_CAT_TYPE_LIMIT];
+
     SysCatPage();
 
     SysCatPage(SysCatPageHeader _pageHeader, SysCatType *_types);

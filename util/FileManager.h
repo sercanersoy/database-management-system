@@ -27,6 +27,8 @@ public:
     static void deleteDataFilesOfType(std::fstream &sysCat, std::string &typeName);
 
     static std::vector<int> returnSortedFileNumbersOfType(std::string &typeName);
+
+    static void deleteDataFile(std::string typeName, int fileNo);
 };
 
 
