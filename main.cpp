@@ -50,14 +50,12 @@ void openInputOutputMode(string &inputPath, string &outputPath) {
     FileManager::openOrCreateInitializeOpenSysCat(sysCat);
 
     string line;
-    getline(input, line);
-    while (!line.empty()) {
+    while (getline(input, line)) {
         try {
             QueryManager::parseAndExecute(sysCat, line);
         } catch (string &message) {
             cout << message << endl;
         }
-        getline(input, line);
     }
 
     sysCat.close();

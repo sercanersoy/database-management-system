@@ -215,6 +215,7 @@ void QueryManager::deleteType(std::fstream &sysCat, std::string &typeName) {
 }
 
 void QueryManager::listType(std::fstream &sysCat) {
+    std::vector<std::string> vector;
     for (int i = 0; i < SYS_CAT_PAGE_LIMIT; ++i) {
         SysCatPage page = SysCatPage::readFromFile(sysCat, i);
         int nofTypes = page.pageHeader.nofTypes;
@@ -222,13 +223,17 @@ void QueryManager::listType(std::fstream &sysCat) {
             for (auto &type : page.types) {
                 int valid = type.typeHeader.valid;
                 if (valid == 1) {
-                    if (output != nullptr) {
-                        *output << type.typeHeader.typeName << std::endl;
-                    } else {
-                        std::cout << type.typeHeader.typeName << std::endl;
-                    }
+                    vector.emplace_back(type.typeHeader.typeName);
                 }
             }
+        }
+    }
+    std::sort(vector.begin(), vector.end());
+    for(auto &typeName : vector) {
+        if (output != nullptr) {
+            *output << typeName << std::endl;
+        } else {
+            std::cout << typeName << std::endl;
         }
     }
 }
@@ -433,6 +438,7 @@ void QueryManager::searchRecord(std::string typeName, int primaryKey, int nofFie
 }
 
 void QueryManager::listRecord(std::string &typeName, int nofFields) {
+    std::vector<std::vector<int>> vector;
     std::regex regExpr("^" + typeName + "#([0-9]+).dat$");
     DIR *dir = opendir(DATA_DIR);
     dirent *ent = readdir(dir);
@@ -450,19 +456,12 @@ void QueryManager::listRecord(std::string &typeName, int nofFields) {
                 }
                 for (auto &record : page.records) {
                     if (record.recordHeader.valid == 1) {
+                        std::vector<int> recordVec;
                         for (int k = 0; k < nofFields; ++k) {
                             int *fieldData = (int *) record.fields[k];
-                            if (output != nullptr) {
-                                *output << *fieldData << " ";
-                            } else {
-                                std::cout << *fieldData << " ";
-                            }
+                            recordVec.emplace_back(*fieldData);
                         }
-                        if (output != nullptr) {
-                            *output << std::endl;
-                        } else {
-                            std::cout << std::endl;
-                        }
+                        vector.emplace_back(recordVec);
                     }
                 }
             }
@@ -471,4 +470,19 @@ void QueryManager::listRecord(std::string &typeName, int nofFields) {
         ent = readdir(dir);
     }
     closedir(dir);
+    std::sort(vector.begin(), vector.end(), [](std::vector<int> v1, std::vector<int> v2) -> bool {return v1[0] < v2[0];});
+    for (auto &recordVec : vector) {
+        for (auto &fieldData : recordVec) {
+            if (output != nullptr) {
+                *output << fieldData << " ";
+            } else {
+                std::cout << fieldData << " ";
+            }
+        }
+        if (output != nullptr) {
+            *output << std::endl;
+        } else {
+            std::cout << std::endl;
+        }
+    }
 }
