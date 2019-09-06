@@ -24,7 +24,7 @@ Also you can give the query commands to the program in an input file and print t
 ./database_management_system input.txt output.txt
 ```
 
-## Instructions
+## How to Use
 
 Available commands are listed below:
 
