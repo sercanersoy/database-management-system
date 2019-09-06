@@ -9,7 +9,7 @@ This project aims to create a simple database management system which will be ab
 In order to build the project, `cmake` must be installed. After installing cmake, run the following in the project's root directory to build the project:
 
 ```
-make
+cmake . && make
 ```
 
 Execute the following command to use the program interactively:
