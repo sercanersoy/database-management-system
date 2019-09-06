@@ -27,4 +27,5 @@ SysCatType &SysCatType::operator=(const SysCatType &rhs) {
             fields[i][j] = rhs.fields[i][j];
         }
     }
+    return *this;
 }

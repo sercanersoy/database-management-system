@@ -25,4 +25,5 @@ SysCatTypeHeader &SysCatTypeHeader::operator=(const SysCatTypeHeader &rhs) {
     for (int i = 0; i < SYS_CAT_TYPE_FIELD_SIZE; ++i) {
         typeName[i] = rhs.typeName[i];
     }
+    return *this;
 }
